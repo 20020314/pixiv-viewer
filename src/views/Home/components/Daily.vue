@@ -9,8 +9,6 @@
     <van-list
       v-model="loading"
       class="artwork-list"
-      :finished="finished"
-      finished-text="没有更多了"
       :error.sync="error"
       error-text="网络异常，点击重新加载"
       @load="getRankList"
@@ -44,15 +42,16 @@ import { Cell, Swipe, SwipeItem, Icon, List, PullRefresh } from "vant";
 import ImageCard from "@/components/ImageCard";
 import api from "@/api";
 import _ from "lodash";
+import moment from "moment";
 export default {
   name: "Daily",
   data() {
     return {
       curPage: 1,
+      curDay: 2,
       artList: [],
       error: false,
       loading: false,
-      finished: false
     };
   },
   methods: {
@@ -60,21 +59,30 @@ export default {
       return api.url(id, index);
     },
     getRankList: _.throttle(async function() {
-      let res = await api.getRankList("day", this.curPage);
+      if (this.curPage > 5) {
+        this.curDay += 1;
+        this.curPage = 1;
+      }
+      let res = await api.getRankList(
+        "day",
+        this.curPage,
+        moment()
+          .subtract(this.curDay, "days")
+          .format("YYYY-MM-DD")
+      );
       if (res.status === 0) {
         let newList = res.data;
         let artList = JSON.parse(JSON.stringify(this.artList));
 
         artList.push(...newList);
-        artList = _.uniqBy(artList, "id")
+        artList = _.uniqBy(artList, "id");
 
         this.artList = artList;
         this.loading = false;
-        this.curPage++;
-        if (this.curPage > 5) this.finished = true;
+        this.curPage += 1;
       } else {
         this.$toast({
-          message: res.msg
+          message: res.msg,
         });
         this.loading = false;
         this.error = true;
@@ -90,9 +98,9 @@ export default {
     toArtwork(id) {
       this.$router.push({
         name: "Artwork",
-        params: { id, list: this.artList }
+        params: { id, list: this.artList },
       });
-    }
+    },
   },
   mounted() {
     // this.getLatest();
@@ -104,8 +112,8 @@ export default {
     [Icon.name]: Icon,
     [List.name]: List,
     [PullRefresh.name]: PullRefresh,
-    ImageCard
-  }
+    ImageCard,
+  },
 };
 </script>
 
