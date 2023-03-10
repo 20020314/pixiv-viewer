@@ -1,6 +1,3 @@
-const autoprefixer = require('autoprefixer');
-const pxtorem = require('postcss-pxtorem');
-
 module.exports = {
   publicPath: process.env.NODE_ENV === 'production'
     ? '././'
@@ -28,6 +25,9 @@ module.exports = {
       }
     },
     sourceMap: true
+  },
+  devServer: {
+    disableHostCheck: true
   },
   lintOnSave: false,
   runtimeCompiler: true,
